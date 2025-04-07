@@ -6,7 +6,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:initial_project/core/utility/logger_utility.dart';
 
-const String _dbName = "prayer_tracker.db";
+const String _dbName = "initial_project.db";
 
 Future<void> loadEnv() async {
   try {

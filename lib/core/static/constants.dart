@@ -18,7 +18,7 @@ const List<Color> availableColors = [
   Color(0xff90A4AE),
 ];
 
-const String packageName = "com.oratiq.prayer_times";
+const String packageName = "com.oratiq.initial_project";
 const String appStoreAppId = "1324615850";
 
 const String playStoreUrl =
