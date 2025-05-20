@@ -1,0 +1,193 @@
+#!/bin/bash
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to get the project name from pubspec.yaml
+function get_project_name() {
+    if [ -f "pubspec.yaml" ]; then
+        # Extract project name from pubspec.yaml
+        local project_name=$(grep "name:" pubspec.yaml | head -1 | awk '{print $2}' | tr -d "'\"")
+        echo "$project_name"
+    else
+        echo -e "${RED}Error: pubspec.yaml not found in the current directory.${NC}"
+        echo -e "Please run this command from the root of a Flutter project."
+        exit 1
+    fi
+}
+
+# Function to update presenter_setup.dart with the new presenter
+function update_presenter_setup() {
+    local project_name=$1
+    local class_prefix=$2
+    local page_name=$3
+    local presenter_setup_path="lib/core/di/setup/presenter_setup.dart"
+    
+    if [ ! -f "$presenter_setup_path" ]; then
+        echo -e "${YELLOW}Warning: Could not find presenter_setup.dart at $presenter_setup_path.${NC}"
+        echo -e "Presenter registration in DI container skipped."
+        return
+    fi
+    
+    # Add import statement if it doesn't exist
+    local import_statement="import 'package:${project_name}/presentation/${page_name}/presenter/${page_name}_presenter.dart';"
+    if ! grep -q "$import_statement" "$presenter_setup_path"; then
+        # Find the last import statement and add the new import after it
+        local last_import_line=$(grep -n "import " "$presenter_setup_path" | tail -1 | cut -d: -f1)
+        sed -i "${last_import_line}a\\${import_statement}" "$presenter_setup_path" 2>/dev/null
+        
+        # If the above sed command fails (macOS compatibility issue), try this alternative
+        if [ $? -ne 0 ]; then
+            sed -i "" "${last_import_line}a\\
+${import_statement}" "$presenter_setup_path"
+        fi
+    fi
+    
+    # The new registration line to add
+    local registration_line="      ..registerLazySingleton(() => loadPresenter(${class_prefix}Presenter()))"
+    
+    # Find the last line with a semicolon in the setup method
+    local setup_start=$(grep -n "setup()" "$presenter_setup_path" | cut -d: -f1)
+    local setup_end=$(grep -n "}" "$presenter_setup_path" | head -1 | cut -d: -f1)
+    
+    if [ -n "$setup_start" ] && [ -n "$setup_end" ]; then
+        # Find semicolons only within the setup method
+        local semicolon_line=$(sed -n "${setup_start},${setup_end}p" "$presenter_setup_path" | 
+                               grep -n ";" | head -1 | cut -d: -f1)
+        
+        if [ -n "$semicolon_line" ]; then
+            # Adjust line number to be relative to the whole file
+            semicolon_line=$((setup_start + semicolon_line - 1))
+            
+            # Insert our registration line before this semicolon
+            sed -i "${semicolon_line}i\\${registration_line}" "$presenter_setup_path" 2>/dev/null
+            
+            # If the above sed command fails (macOS compatibility issue), try this alternative
+            if [ $? -ne 0 ]; then
+                sed -i "" "${semicolon_line}i\\
+${registration_line}" "$presenter_setup_path"
+            fi
+            
+            echo -e "${GREEN}✓ Updated presenter_setup.dart with ${class_prefix}Presenter registration.${NC}"
+            echo -e "${BLUE}  Added: ${NC}${registration_line}"
+        else
+            echo -e "${YELLOW}Warning: Could not find semicolon in setup method.${NC}"
+            return
+        fi
+    else
+        echo -e "${YELLOW}Warning: Could not find setup method.${NC}"
+        return
+    fi
+}
+
+# Function to generate page
+function generate_page() {
+    local page_name=$1
+    
+    if [ -z "$page_name" ]; then
+        echo -e "${RED}Error: Page name is required.${NC}"
+        echo -e "Usage: $0 <page_name>"
+        exit 1
+    fi
+    
+    # Get project name from pubspec.yaml
+    project_name=$(get_project_name)
+    
+    # Convert input to lowercase for folder name
+    page_name=$(echo "$page_name" | tr '[:upper:]' '[:lower:]')
+    # Convert first letter to uppercase and rest lowercase for class name
+    class_prefix=$(echo "$page_name" | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}')
+    
+    echo -e "${YELLOW}Creating page structure for ${class_prefix}Page in ${project_name} project...${NC}\n"
+    
+    # Create the directories
+    mkdir -p "lib/presentation/${page_name}/presenter"
+    mkdir -p "lib/presentation/${page_name}/ui"
+    mkdir -p "lib/presentation/${page_name}/widgets"
+    
+    # Create presenter files
+    cat > "lib/presentation/${page_name}/presenter/${page_name}_presenter.dart" << EOF
+import 'dart:async';
+import 'package:${project_name}/core/base/base_presenter.dart';
+import 'package:${project_name}/core/utility/utility.dart';
+import 'package:${project_name}/presentation/${page_name}/presenter/${page_name}_ui_state.dart';
+
+class ${class_prefix}Presenter extends BasePresenter<${class_prefix}UiState> {
+  final Obs<${class_prefix}UiState> uiState = Obs<${class_prefix}UiState>(${class_prefix}UiState.empty());
+  ${class_prefix}UiState get currentUiState => uiState.value;
+
+  @override
+  Future<void> addUserMessage(String message) async {
+    uiState.value = currentUiState.copyWith(userMessage: message);
+    showMessage(message: currentUiState.userMessage);
+  }
+
+  @override
+  Future<void> toggleLoading({required bool loading}) async {
+    uiState.value = currentUiState.copyWith(isLoading: loading);
+  }
+}
+EOF
+
+    cat > "lib/presentation/${page_name}/presenter/${page_name}_ui_state.dart" << EOF
+import 'package:${project_name}/core/base/base_ui_state.dart';
+
+class ${class_prefix}UiState extends BaseUiState {
+  const ${class_prefix}UiState({required super.isLoading, required super.userMessage});
+
+  factory ${class_prefix}UiState.empty() {
+    return ${class_prefix}UiState(isLoading: false, userMessage: '');
+  }
+
+  @override
+  List<Object?> get props => [isLoading, userMessage];
+
+  //Add more properties to the state
+
+  ${class_prefix}UiState copyWith({bool? isLoading, String? userMessage}) {
+    return ${class_prefix}UiState(
+      isLoading: isLoading ?? this.isLoading,
+      userMessage: userMessage ?? this.userMessage,
+    );
+  }
+}
+EOF
+
+    # Create the UI file
+    cat > "lib/presentation/${page_name}/ui/${page_name}_page.dart" << EOF
+import 'package:flutter/material.dart';
+
+class ${class_prefix}Page extends StatelessWidget {
+  const ${class_prefix}Page({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('${class_prefix}')),
+      body: Center(child: Text('${class_prefix}')),
+    );
+  }
+}
+EOF
+
+    # Update the presenter_setup.dart file
+    update_presenter_setup "$project_name" "$class_prefix" "$page_name"
+
+    # Show success message with proper indentation
+    echo -e "\n${GREEN}✓ Page '${class_prefix}' created successfully!${NC}"
+    echo -e "  ${BLUE}Structure:${NC}"
+    echo -e "    └── ${BLUE}lib/presentation/${page_name}${NC}"
+    echo -e "        ├── ${BLUE}ui${NC}"
+    echo -e "        │   └── ${GREEN}${page_name}_page.dart${NC}"
+    echo -e "        ├── ${BLUE}widgets${NC}"
+    echo -e "        └── ${BLUE}presenter${NC}"
+    echo -e "            ├── ${GREEN}${page_name}_ui_state.dart${NC}"
+    echo -e "            └── ${GREEN}${page_name}_presenter.dart${NC}"
+}
+
+# Execute the function with the first argument
+generate_page "$1"

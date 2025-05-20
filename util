@@ -55,321 +55,208 @@ function display_apk_size() {
 }
 
 # Main script logic
-if [ "$1" == "apk" ]; then
-  echo -e "${YELLOW}Building APK (Full Process)...${NC}\n"
-  
-  (flutter clean >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Cleaning project...                                   " $PID
+case "$1" in
+  "apk")
+    echo -e "${YELLOW}Building APK (Full Process)...${NC}\n"
+    
+    (flutter clean >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Cleaning project...                                   " $PID
 
-  (flutter pub get >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Getting dependencies...                              " $PID
+    (flutter pub get >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Getting dependencies...                              " $PID
 
-  (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Generating build files...                            " $PID
+    (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Generating build files...                            " $PID
 
-  (flutter build apk --release --obfuscate --target-platform android-arm64 --split-debug-info=./ >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Building APK...                                      " $PID
+    (flutter build apk --release --obfuscate --target-platform android-arm64 --split-debug-info=./ >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Building APK...                                      " $PID
 
-  echo -e "\n${GREEN}✓ APK built successfully!${NC}"
-  
-  # Display APK size
-  display_apk_size
-  
-  # Open the APK directory
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    open build/app/outputs/flutter-apk/
-  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    xdg-open build/app/outputs/flutter-apk/
-  elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-    start build/app/outputs/flutter-apk/
-  else
-    echo "Cannot open directory automatically. Please check: build/app/outputs/flutter-apk/"
-  fi
+    echo -e "\n${GREEN}✓ APK built successfully!${NC}"
+    
+    # Display APK size
+    display_apk_size
+    
+    # Open the APK directory
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      open build/app/outputs/flutter-apk/
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      xdg-open build/app/outputs/flutter-apk/
+    elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+      start build/app/outputs/flutter-apk/
+    else
+      echo "Cannot open directory automatically. Please check: build/app/outputs/flutter-apk/"
+    fi
+    ;;
 
-elif [ "$1" == "aab" ]; then
-  echo -e "${YELLOW}Building AAB...${NC}\n"
-  
-  (flutter clean >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Cleaning project...                                   " $PID
+  "aab")
+    echo -e "${YELLOW}Building AAB...${NC}\n"
+    
+    (flutter clean >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Cleaning project...                                   " $PID
 
-  (flutter pub get >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Getting dependencies...                              " $PID
+    (flutter pub get >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Getting dependencies...                              " $PID
 
-  (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Generating build files...                            " $PID
+    (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Generating build files...                            " $PID
 
-  (flutter build appbundle --release --obfuscate --split-debug-info=./ >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Building AAB...                                      " $PID
-  
-  echo -e "\n${GREEN}✓ AAB built successfully!${NC}"
-  
-  # Open the directory containing the AAB
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    open build/app/outputs/bundle/release/
-  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    xdg-open build/app/outputs/bundle/release/
-  elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-    start build/app/outputs/bundle/release/
-  else
-    echo "Cannot open directory automatically. Please check: build/app/outputs/bundle/release/"
-  fi
+    (flutter build appbundle --release --obfuscate --split-debug-info=./ >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Building AAB...                                      " $PID
+    
+    echo -e "\n${GREEN}✓ AAB built successfully!${NC}"
+    
+    # Open the directory containing the AAB
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      open build/app/outputs/bundle/release/
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      xdg-open build/app/outputs/bundle/release/
+    elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+      start build/app/outputs/bundle/release/
+    else
+      echo "Cannot open directory automatically. Please check: build/app/outputs/bundle/release/"
+    fi
+    ;;
 
-elif [ "$1" == "lang" ]; then
-  # Run flutter gen-l10n to generate localization files
-  (flutter gen-l10n >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Generating localizations                              " $PID
-  
-  echo -e "\n${CHECKMARK}  Localizations generated successfully."
+  "lang")
+    # Run flutter gen-l10n to generate localization files
+    (flutter gen-l10n >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Generating localizations                              " $PID
+    
+    echo -e "\n${CHECKMARK}  Localizations generated successfully."
+    ;;
 
-elif [ "$1" == "db" ]; then
-  echo -e "${YELLOW}Executing build_runner...${NC}  \n"
-  # Run build_runner to generate Dart code
-  (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Running build_runner     " $PID
+  "db")
+    echo -e "${YELLOW}Executing build_runner...${NC}  \n"
+    # Run build_runner to generate Dart code
+    (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Running build_runner     " $PID
+    ;;
 
-elif [ "$1" == "setup" ]; then
-  echo -e "${YELLOW}Performing full setup...${NC}  \n"
+  "setup")
+    echo -e "${YELLOW}Performing full setup...${NC}  \n"
 
-  (flutter clean >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Cleaning project...                                  " $PID
+    (flutter clean >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Cleaning project...                                  " $PID
 
-  (flutter pub upgrade >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Upgrading dependencies...                            " $PID
+    (flutter pub upgrade >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Upgrading dependencies...                            " $PID
 
-  (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Running build_runner...                              " $PID
+    (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Running build_runner...                              " $PID
 
-  (flutter gen-l10n >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Generating localizations...                          " $PID
+    (flutter gen-l10n >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Generating localizations...                          " $PID
 
-  (flutter pub upgrade >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Refreshing dependencies...                           " $PID
+    (flutter pub upgrade >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Refreshing dependencies...                           " $PID
 
-  (flutter analyze >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Analyzing code...                                    " $PID
+    (flutter analyze >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Analyzing code...                                    " $PID
 
-  (dart format . >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Formatting code...                                   " $PID
+    (dart format . >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Formatting code...                                   " $PID
 
-  echo -e "\n ${GREEN}✓  Full setup completed successfully.  ${NC}"
+    echo -e "\n ${GREEN}✓  Full setup completed successfully.  ${NC}"
+    ;;
 
-elif [ "$1" == "cache-repair" ]; then
-  echo -e "${YELLOW}Repairing pub cache...${NC}\n"
-  
-  (flutter pub cache repair >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Repairing pub cache...                               " $PID
-  
-  echo -e "\n ${GREEN}✓  Pub cache repaired successfully.  ${NC}"
+  "cache-repair")
+    echo -e "${YELLOW}Repairing pub cache...${NC}\n"
+    
+    (flutter pub cache repair >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Repairing pub cache...                               " $PID
+    
+    echo -e "\n ${GREEN}✓  Pub cache repaired successfully.  ${NC}"
+    ;;
 
-elif [ "$1" == "cleanup" ]; then
-  echo -e "${YELLOW}Cleaning up project...${NC}\n"
-  
-  (flutter clean >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Cleaning project...                                   " $PID
+  "cleanup")
+    echo -e "${YELLOW}Cleaning up project...${NC}\n"
+    
+    (flutter clean >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Cleaning project...                                   " $PID
 
-  (flutter pub get >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Getting dependencies...                              " $PID
-  
-  echo -e "\n${GREEN}✓ Project cleaned successfully!${NC}"
+    (flutter pub get >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Getting dependencies...                              " $PID
+    
+    echo -e "\n${GREEN}✓ Project cleaned successfully!${NC}"
+    ;;
 
-elif [ "$1" == "release-run" ]; then
-  echo -e "${YELLOW}Building & Installing Release APK...${NC}\n"
-  
-  (flutter clean >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Cleaning project...                                   " $PID
+  "release-run")
+    echo -e "${YELLOW}Building & Installing Release APK...${NC}\n"
+    
+    (flutter clean >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Cleaning project...                                   " $PID
 
-  (flutter pub get >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Getting dependencies...                              " $PID
+    (flutter pub get >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Getting dependencies...                              " $PID
 
-  (flutter gen-l10n >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Generating localizations...                          " $PID
+    (flutter gen-l10n >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Generating localizations...                          " $PID
 
-  (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Generating build files...                            " $PID
+    (dart run build_runner build --delete-conflicting-outputs >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Generating build files...                            " $PID
 
-  (flutter build apk --release --obfuscate --target-platform android-arm64 --split-debug-info=./ >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Building APK...                                      " $PID
+    (flutter build apk --release --obfuscate --target-platform android-arm64 --split-debug-info=./ >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Building APK...                                      " $PID
 
-  # Display APK size after building
-  display_apk_size
+    # Display APK size after building
+    display_apk_size
 
-  (flutter install --release >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Installing on device...                              " $PID
+    (flutter install --release >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Installing on device...                              " $PID
 
-  echo -e "\n${GREEN}✓ APK built and installed successfully!${NC}"
+    echo -e "\n${GREEN}✓ APK built and installed successfully!${NC}"
+    ;;
 
-elif [ "$1" == "page" ]; then
-  if [ -z "$2" ]; then
-    echo -e "${RED}Error: Please provide a page name.${NC}"
-    echo -e "Usage: $0 page <name>"
+  "page")
+    echo -e "${YELLOW}Creating page...${NC}\n"
+    
+    if [ -z "$2" ]; then
+      echo -e "${RED}Error: Page name is required.${NC}"
+      echo -e "Usage: $0 page <page_name>"
+      exit 1
+    fi
+    
+    # Run the util_page_generator with the page name
+    ./util_page_generator "$2"
+    ;;
+
+  *)
+    echo -e "${YELLOW}Usage: $0 [command]${NC}"
+    echo -e "\nAvailable commands:"
+    echo -e "  apk          Build release APK (Full Process)"
+    echo -e "  aab          Build release AAB"
+    echo -e "  lang         Generate localization files"
+    echo -e "  db           Run build_runner"
+    echo -e "  setup        Perform full project setup"
+    echo -e "  cache-repair Repair pub cache"
+    echo -e "  cleanup      Clean project and get dependencies"
+    echo -e "  release-run  Build & install release APK on connected device"
     exit 1
-  fi
-
-  # Set the page name from the argument
-  PAGE_NAME="$2"
-  
-  # Convert page_name to snake_case if it contains uppercase
-  SNAKE_CASE_NAME=$(echo "$PAGE_NAME" | sed 's/\([A-Z]\)/_\L\1/g' | sed 's/^_//')
-  
-  # Prepare directory names
-  BASE_DIR="lib/presentation/$SNAKE_CASE_NAME"
-  UI_DIR="$BASE_DIR/ui"
-  PRESENTER_DIR="$BASE_DIR/presenter"
-  
-  echo -e "${YELLOW}Creating page structure for '$PAGE_NAME'...${NC}\n"
-  
-  # Create directories
-  (mkdir -p "$UI_DIR" "$PRESENTER_DIR" >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Creating directories...                               " $PID
-  
-  # Convert snake_case to CamelCase for class names
-  CAMEL_CASE_NAME=""
-  IFS='_' read -ra PARTS <<< "$SNAKE_CASE_NAME"
-  for PART in "${PARTS[@]}"; do
-    CAMEL_CASE_NAME="${CAMEL_CASE_NAME}$(tr '[:lower:]' '[:upper:]' <<< ${PART:0:1})${PART:1}"
-  done
-  
-  # Create UI file
-  UI_FILE="$UI_DIR/${SNAKE_CASE_NAME}_page.dart"
-  cat > "$UI_FILE" << EOF
-import 'package:flutter/material.dart';
-
-class ${CAMEL_CASE_NAME}Page extends StatelessWidget {
-  const ${CAMEL_CASE_NAME}Page({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('${CAMEL_CASE_NAME} Page'),
-      ),
-      body: const Center(
-        child: Text('Welcome to ${CAMEL_CASE_NAME} Page'),
-      ),
-    );
-  }
-}
-EOF
-
-  (echo "Created UI file" >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Creating UI file...                                  " $PID
-  
-  # Create UI State file
-  UI_STATE_FILE="$PRESENTER_DIR/${SNAKE_CASE_NAME}_ui_state.dart"
-  cat > "$UI_STATE_FILE" << EOF
-import 'package:quran_majeed/core/base/base_ui_state.dart';
-
-class ${CAMEL_CASE_NAME}UiState extends BaseUiState {
-  const ${CAMEL_CASE_NAME}UiState({
-    required super.isLoading,
-    required super.userMessage,
-  });
-
-  factory ${CAMEL_CASE_NAME}UiState.empty() {
-    return const ${CAMEL_CASE_NAME}UiState(
-      userMessage: null,
-      isLoading: true,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-        userMessage,
-        isLoading,
-      ];
-
-  ${CAMEL_CASE_NAME}UiState copyWith({
-    String? userMessage,
-    bool? isLoading,
-  }) {
-    return ${CAMEL_CASE_NAME}UiState(
-      isLoading: isLoading ?? this.isLoading,
-      userMessage: userMessage ?? this.userMessage,
-    );
-  }
-}
-EOF
-
-  (echo "Created UI State file" >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Creating UI State file...                             " $PID
-  
-  # Create Presenter file
-  PRESENTER_FILE="$PRESENTER_DIR/${SNAKE_CASE_NAME}_presenter.dart"
-  cat > "$PRESENTER_FILE" << EOF
-import 'package:quran_majeed/core/base/base_presenter.dart';
-import 'package:quran_majeed/core/utility/utility.dart';
-import '${SNAKE_CASE_NAME}_ui_state.dart';
-
-class ${CAMEL_CASE_NAME}Presenter extends BasePresenter<${CAMEL_CASE_NAME}UiState> {
-  final Obs<${CAMEL_CASE_NAME}UiState> uiState = Obs<${CAMEL_CASE_NAME}UiState>(${CAMEL_CASE_NAME}UiState.empty());
-  ${CAMEL_CASE_NAME}UiState get currentUiState => uiState.value;
-
-  @override
-  Future<void> addUserMessage(String message) async {
-    uiState.value = currentUiState.copyWith(userMessage: message);
-    showMessage(message: currentUiState.userMessage);
-  }
-
-  @override
-  Future<void> toggleLoading({required bool loading}) async {
-    uiState.value = currentUiState.copyWith(isLoading: loading);
-  }
-}
-EOF
-
-  (echo "Created Presenter file" >/dev/null 2>&1) &
-  PID=$!
-  show_loading "Creating Presenter file...                            " $PID
-  
-  echo -e "\n${GREEN}✓ Page '${CAMEL_CASE_NAME}' created successfully!${NC}"
-  echo -e "  ${BLUE}Structure:${NC}"
-  echo -e "    └── ${BLUE}lib/presentation/${SNAKE_CASE_NAME}${NC}"
-  echo -e "        ├── ${BLUE}ui${NC}"
-  echo -e "        │   └── ${GREEN}${SNAKE_CASE_NAME}_page.dart${NC}"
-  echo -e "        └── ${BLUE}presenter${NC}"
-  echo -e "            ├── ${GREEN}${SNAKE_CASE_NAME}_ui_state.dart${NC}"
-  echo -e "            └── ${GREEN}${SNAKE_CASE_NAME}_presenter.dart${NC}"
-
-else
-  echo -e "${YELLOW}Usage: $0 [command]${NC}"
-  echo -e "\nAvailable commands:"
-  echo -e "  apk          Build release APK (Full Process)"
-  echo -e "  aab          Build release AAB"
-  echo -e "  lang         Generate localization files"
-  echo -e "  db           Run build_runner"
-  echo -e "  setup        Perform full project setup"
-  echo -e "  cache-repair Repair pub cache"
-  echo -e "  cleanup      Clean project and get dependencies"
-  echo -e "  release-run  Build & install release APK on connected device"
-  echo -e "  page         Create a new page structure"
-  exit 1
-fi
+    ;;
+esac
