@@ -233,6 +233,33 @@ case "$1" in
     echo -e "\n${GREEN}✓ APK built and installed successfully!${NC}"
     ;;
 
+  "pod")
+    echo -e "${YELLOW}Updating iOS pods...${NC}\n"
+    
+    # Navigate to iOS directory
+    cd ios
+    
+    # Delete Podfile.lock
+    (rm -f Podfile.lock >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Removing Podfile.lock                                 " $PID
+    
+    # Update pod repo
+    (pod repo update >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Updating pod repository                               " $PID
+    
+    # Install pods
+    (pod install >/dev/null 2>&1) &
+    PID=$!
+    show_loading "Installing pods                                       " $PID
+    
+    # Return to root directory
+    cd ..
+    
+    echo -e "\n${GREEN}✓ iOS pods updated successfully!${NC}"
+    ;;
+
   "page")
     echo -e "${YELLOW}Creating page...${NC}\n"
     
@@ -260,3 +287,7 @@ case "$1" in
     exit 1
     ;;
 esac
+
+
+
+
