@@ -382,14 +382,14 @@ def create_page(page_name):
         print(f"Usage: {sys.argv[0]} page <page_name>")
         sys.exit(1)
     
-    # Run the util_page_generator with the page name
+    # Run the create_page with the page name
     try:
-        subprocess.run(["create_page.py", page_name], check=True)
+        subprocess.run(["./create_page.py", page_name], check=True)
     except subprocess.CalledProcessError:
         print(f"{RED}Error: Failed to run page generator.{NC}")
         sys.exit(1)
     except FileNotFoundError:
-        print(f"{RED}Error: util_page_generator not found.{NC}")
+        print(f"{RED}Error: create_page not found.{NC}")
         print("Make sure it exists and is executable in the current directory.")
         sys.exit(1)
 
