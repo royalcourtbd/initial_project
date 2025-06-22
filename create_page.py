@@ -103,6 +103,7 @@ def generate_page(page_name):
     # Create folder structure
     base_path = f"lib/features/{page_name}"
     os.makedirs(f"{base_path}/data/datasource", exist_ok=True)
+    os.makedirs(f"{base_path}/data/models", exist_ok=True)
     os.makedirs(f"{base_path}/data/repositories", exist_ok=True)
     os.makedirs(f"{base_path}/domain/datasource", exist_ok=True)
     os.makedirs(f"{base_path}/domain/repositories", exist_ok=True)
@@ -129,6 +130,8 @@ class {class_prefix}RepositoryImpl implements {class_prefix}Repository {{
     
     # Generate DI file content
     di_content = f'''import 'package:{project_name}/core/base/base_presenter.dart';
+import 'package:{project_name}/features/{page_name}/data/repositories/{page_name}_repository_impl.dart';
+import 'package:{project_name}/features/{page_name}/domain/repositories/{page_name}_repository.dart';
 import 'package:{project_name}/features/{page_name}/presentation/presenter/{page_name}_presenter.dart';
 
 import 'package:get_it/get_it.dart';
