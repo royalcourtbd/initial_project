@@ -94,8 +94,9 @@ def generate_page(page_name):
     
     # Convert page name to lowercase
     page_name = page_name.lower()
-    # Create class prefix (first letter uppercase, rest lowercase)
-    class_prefix = page_name[0].upper() + page_name[1:].lower()
+    
+    # Create class prefix - convert snake_case to PascalCase
+    class_prefix = ''.join(word.capitalize() for word in page_name.split('_'))
     
     print(f"{YELLOW}Creating feature structure for {class_prefix} in {project_name} project...{NC}\n")
     
@@ -112,6 +113,20 @@ def generate_page(page_name):
     os.makedirs(f"{base_path}/presentation/widgets", exist_ok=True)
     os.makedirs(f"{base_path}/di", exist_ok=True)
     
+    # Generate Domain Repository content
+    domain_repository_content = f'''abstract class {class_prefix}Repository {{
+  
+}}
+'''
+    
+    # Generate Data Repository Implementation content
+    data_repository_content = f'''import 'package:{project_name}/features/{page_name}/domain/repositories/{page_name}_repository.dart';
+
+class {class_prefix}RepositoryImpl implements {class_prefix}Repository {{
+  
+}}
+'''
+    
     # Generate DI file content
     di_content = f'''import 'package:{project_name}/core/base/base_presenter.dart';
 import 'package:{project_name}/features/{page_name}/presentation/presenter/{page_name}_presenter.dart';
@@ -120,6 +135,15 @@ import 'package:get_it/get_it.dart';
 
 class {class_prefix}Di {{
   static Future<void> setup(GetIt serviceLocator) async {{
+    //  Data Source
+
+    //  Repository
+    serviceLocator.registerLazySingleton<{class_prefix}Repository>(
+      () => {class_prefix}RepositoryImpl(),
+    );
+
+    // Use Cases
+
     // Presenters
     serviceLocator.registerFactory(
       () => loadPresenter({class_prefix}Presenter()),
@@ -192,6 +216,12 @@ class {class_prefix}Page extends StatelessWidget {{
 '''
     
     # Write files
+    with open(f"{base_path}/domain/repositories/{page_name}_repository.dart", 'w') as file:
+        file.write(domain_repository_content)
+    
+    with open(f"{base_path}/data/repositories/{page_name}_repository_impl.dart", 'w') as file:
+        file.write(data_repository_content)
+    
     with open(f"{base_path}/di/{page_name}_di.dart", 'w') as file:
         file.write(di_content)
     
@@ -214,9 +244,11 @@ class {class_prefix}Page extends StatelessWidget {{
     print(f"        ├── {BLUE}data{NC}")
     print(f"        │   ├── {BLUE}datasource{NC}")
     print(f"        │   └── {BLUE}repositories{NC}")
+    print(f"        │       └── {GREEN}{page_name}_repository_impl.dart{NC}")
     print(f"        ├── {BLUE}domain{NC}")
     print(f"        │   ├── {BLUE}datasource{NC}")
     print(f"        │   ├── {BLUE}repositories{NC}")
+    print(f"        │   │   └── {GREEN}{page_name}_repository.dart{NC}")
     print(f"        │   ├── {BLUE}entities{NC}")
     print(f"        │   └── {BLUE}usecase{NC}")
     print(f"        ├── {BLUE}presentation{NC}")
