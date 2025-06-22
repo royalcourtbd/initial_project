@@ -384,7 +384,7 @@ def create_page(page_name):
     
     # Run the create_page with the page name
     try:
-        subprocess.run(["./create_page.py", page_name], check=True)
+        subprocess.run(["python3", "create_page.py", "page", page_name], check=True)
     except subprocess.CalledProcessError:
         print(f"{RED}Error: Failed to run page generator.{NC}")
         sys.exit(1)
