@@ -5,6 +5,7 @@ import time
 import signal
 import platform
 import subprocess
+import glob
 
 # Colors for output
 RED = '\033[0;31m'
@@ -40,21 +41,20 @@ def show_loading(description, process):
         return True
     else:
         print(f"\b{CROSS} ", flush=True)
+        stdout, stderr = process.communicate()
+        print(f"\n{RED}Error Output:\n{stderr.decode()}{NC}")
         return False
 
 def display_apk_size():
     """Function to display APK size"""
-    apk_path = "build/app/outputs/flutter-apk/app-release.apk"
-    
-    if os.path.isfile(apk_path):
-        # Get size in bytes
-        size_bytes = os.path.getsize(apk_path)
-        # Convert to megabytes (with 2 decimal places)
-        size_mb = round(size_bytes / 1048576, 2)
-        
-        print(f"{BLUE}APK Size: {size_mb} MB{NC}")
+    apk_files = glob.glob("build/app/outputs/flutter-apk/*.apk")
+    if apk_files:
+        for apk_path in apk_files:
+            size_bytes = os.path.getsize(apk_path)
+            size_mb = round(size_bytes / 1048576, 2)
+            print(f"{BLUE}APK: {os.path.basename(apk_path)} | Size: {size_mb} MB{NC}")
     else:
-        print(f"{RED}APK file not found at {apk_path}{NC}")
+        print(f"{RED}APK file not found in build/app/outputs/flutter-apk/{NC}")
 
 def open_directory(directory_path):
     """Opens a directory based on the operating system"""
@@ -389,8 +389,8 @@ def create_page(page_name):
         print(f"{RED}Error: Failed to run page generator.{NC}")
         sys.exit(1)
     except FileNotFoundError:
-        print(f"{RED}Error: create_page not found.{NC}")
-        print("Make sure it exists and is executable in the current directory.")
+        print(f"{RED}Error: create_page.py not found.{NC}")
+        print("Make sure create_page.py exists in the current directory.")
         sys.exit(1)
 
 def show_usage():
