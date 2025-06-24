@@ -1,13 +1,15 @@
 plugins {
     id("com.android.application")
+    // START: FlutterFire Configuration
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
+    // END: FlutterFire Configuration
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 import java.util.Properties
-import java.io.File
-import java.io.FileInputStream
 
 // Load local.properties
 val localProperties = Properties()
@@ -16,16 +18,14 @@ if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.reader())
 }
 
-
 // Get version code from local.properties
 val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toIntOrNull() ?: 1
 
 // Get version name from local.properties
 val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
-
 android {
-    namespace = "com.example.initial_project"
+    namespace = "com.ihadis.dua"
     compileSdk = 35
     ndkVersion = rootProject.extra["ndkVersion"] as String
 
@@ -40,10 +40,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.initial_project"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "com.ihadis.dua"
         minSdk = 23
         targetSdk = 35
         versionCode = flutterVersionCode
@@ -57,6 +54,17 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // === ABI Splits Configuration ===
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a")
+            isUniversalApk = false
+        }
+    }
+    // ===============================
 }
 
 flutter {
@@ -64,5 +72,5 @@ flutter {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4") 
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
