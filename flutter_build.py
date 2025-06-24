@@ -42,7 +42,8 @@ def show_loading(description, process):
     else:
         print(f"\b{CROSS} ", flush=True)
         stdout, stderr = process.communicate()
-        print(f"\n{RED}Error Output:\n{stderr.decode()}{NC}")
+        if stderr:
+            print(f"\n{RED}Error Output:\n{stderr.decode()}{NC}")
         return False
 
 def display_apk_size():
@@ -55,6 +56,14 @@ def display_apk_size():
             print(f"{BLUE}APK: {os.path.basename(apk_path)} | Size: {size_mb} MB{NC}")
     else:
         print(f"{RED}APK file not found in build/app/outputs/flutter-apk/{NC}")
+
+def run_flutter_command(cmd_list, description):
+    process = subprocess.Popen(
+        cmd_list,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    return show_loading(description, process)
 
 def open_directory(directory_path):
     """Opens a directory based on the operating system"""
@@ -76,36 +85,16 @@ def build_apk():
     print(f"{YELLOW}Building APK (Full Process)...{NC}\n")
     
     # Clean the project
-    process = subprocess.Popen(
-        ["flutter", "clean"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Cleaning project...                                   ", process)
+    run_flutter_command(["flutter", "clean"], "Cleaning project...                                   ")
     
     # Get dependencies
-    process = subprocess.Popen(
-        ["flutter", "pub", "get"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Getting dependencies...                              ", process)
+    run_flutter_command(["flutter", "pub", "get"], "Getting dependencies...                              ")
     
     # Generate build files
-    process = subprocess.Popen(
-        ["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Generating build files...                            ", process)
+    run_flutter_command(["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"], "Generating build files...                            ")
     
     # Build APK
-    process = subprocess.Popen(
-        ["flutter", "build", "apk", "--release", "--obfuscate", "--target-platform", "android-arm64", "--split-debug-info=./"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Building APK...                                      ", process)
+    run_flutter_command(["flutter", "build", "apk", "--release", "--obfuscate", "--target-platform", "android-arm64", "--split-debug-info=./"], "Building APK...                                      ")
     
     print(f"\n{GREEN}✓ APK built successfully!{NC}")
     
@@ -120,36 +109,16 @@ def build_aab():
     print(f"{YELLOW}Building AAB...{NC}\n")
     
     # Clean the project
-    process = subprocess.Popen(
-        ["flutter", "clean"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Cleaning project...                                   ", process)
+    run_flutter_command(["flutter", "clean"], "Cleaning project...                                   ")
     
     # Get dependencies
-    process = subprocess.Popen(
-        ["flutter", "pub", "get"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Getting dependencies...                              ", process)
+    run_flutter_command(["flutter", "pub", "get"], "Getting dependencies...                              ")
     
     # Generate build files
-    process = subprocess.Popen(
-        ["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Generating build files...                            ", process)
+    run_flutter_command(["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"], "Generating build files...                            ")
     
     # Build AAB
-    process = subprocess.Popen(
-        ["flutter", "build", "appbundle", "--release", "--obfuscate", "--split-debug-info=./"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Building AAB...                                      ", process)
+    run_flutter_command(["flutter", "build", "appbundle", "--release", "--obfuscate", "--split-debug-info=./"], "Building AAB...                                      ")
     
     print(f"\n{GREEN}✓ AAB built successfully!{NC}")
     
@@ -159,170 +128,62 @@ def build_aab():
 def generate_lang():
     """Generate localization files"""
     # Run flutter gen-l10n to generate localization files
-    process = subprocess.Popen(
-        ["flutter", "gen-l10n"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Generating localizations                              ", process)
-    
+    run_flutter_command(["flutter", "gen-l10n"], "Generating localizations                              ")
     print(f"\n{CHECKMARK}  Localizations generated successfully.")
 
 def run_build_runner():
     """Run build_runner to generate Dart code"""
     print(f"{YELLOW}Executing build_runner...{NC}  \n")
-    
-    # Run build_runner to generate Dart code
-    process = subprocess.Popen(
-        ["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Running build_runner     ", process)
+    run_flutter_command(["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"], "Running build_runner     ")
 
 def full_setup():
     """Perform full project setup"""
     print(f"{YELLOW}Performing full setup...{NC}  \n")
     
     # Clean the project
-    process = subprocess.Popen(
-        ["flutter", "clean"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Cleaning project...                                  ", process)
+    run_flutter_command(["flutter", "clean"], "Cleaning project...                                  ")
     
     # Upgrade dependencies
-    process = subprocess.Popen(
-        ["flutter", "pub", "upgrade"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Upgrading dependencies...                            ", process)
+    run_flutter_command(["flutter", "pub", "upgrade"], "Upgrading dependencies...                            ")
     
     # Run build_runner
-    process = subprocess.Popen(
-        ["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Running build_runner...                              ", process)
+    run_flutter_command(["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"], "Running build_runner...                              ")
     
     # Generate localizations
-    process = subprocess.Popen(
-        ["flutter", "gen-l10n"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Generating localizations...                          ", process)
+    run_flutter_command(["flutter", "gen-l10n"], "Generating localizations...                          ")
     
     # Refresh dependencies
-    process = subprocess.Popen(
-        ["flutter", "pub", "upgrade"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Refreshing dependencies...                           ", process)
+    run_flutter_command(["flutter", "pub", "upgrade"], "Refreshing dependencies...                           ")
     
     # Analyze code
-    process = subprocess.Popen(
-        ["flutter", "analyze"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Analyzing code...                                    ", process)
+    run_flutter_command(["flutter", "analyze"], "Analyzing code...                                    ")
     
     # Format code
-    process = subprocess.Popen(
-        ["dart", "format", "."],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Formatting code...                                   ", process)
+    run_flutter_command(["dart", "format", "."], "Formatting code...                                   ")
     
     print(f"\n {GREEN}✓  Full setup completed successfully.  {NC}")
 
 def repair_cache():
     """Repair pub cache"""
     print(f"{YELLOW}Repairing pub cache...{NC}\n")
-    
-    # Repair pub cache
-    process = subprocess.Popen(
-        ["flutter", "pub", "cache", "repair"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Repairing pub cache...                               ", process)
-    
+    run_flutter_command(["flutter", "pub", "cache", "repair"], "Repairing pub cache...                               ")
     print(f"\n {GREEN}✓  Pub cache repaired successfully.  {NC}")
 
 def cleanup_project():
     """Clean up project"""
     print(f"{YELLOW}Cleaning up project...{NC}\n")
-    
-    # Clean the project
-    process = subprocess.Popen(
-        ["flutter", "clean"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Cleaning project...                                   ", process)
-    
-    # Get dependencies
-    process = subprocess.Popen(
-        ["flutter", "pub", "get"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Getting dependencies...                              ", process)
-    
+    run_flutter_command(["flutter", "clean"], "Cleaning project...                                   ")
+    run_flutter_command(["flutter", "pub", "get"], "Getting dependencies...                              ")
     print(f"\n{GREEN}✓ Project cleaned successfully!{NC}")
 
 def release_run():
     """Build & Install Release APK"""
     print(f"{YELLOW}Building & Installing Release APK...{NC}\n")
-    
-    # Clean the project
-    process = subprocess.Popen(
-        ["flutter", "clean"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Cleaning project...                                   ", process)
-    
-    # Get dependencies
-    process = subprocess.Popen(
-        ["flutter", "pub", "get"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Getting dependencies...                              ", process)
-    
-    # Generate localizations
-    process = subprocess.Popen(
-        ["flutter", "gen-l10n"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Generating localizations...                          ", process)
-    
-    # Generate build files
-    process = subprocess.Popen(
-        ["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Generating build files...                            ", process)
-    
-    # Build APK
-    process = subprocess.Popen(
-        ["flutter", "build", "apk", "--release", "--obfuscate", "--target-platform", "android-arm64", "--split-debug-info=./"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Building APK...                                      ", process)
-    
-    # Display APK size after building
+    run_flutter_command(["flutter", "clean"], "Cleaning project...                                   ")
+    run_flutter_command(["flutter", "pub", "get"], "Getting dependencies...                              ")
+    run_flutter_command(["flutter", "gen-l10n"], "Generating localizations...                          ")
+    run_flutter_command(["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"], "Generating build files...                            ")
+    run_flutter_command(["flutter", "build", "apk", "--release", "--obfuscate", "--target-platform", "android-arm64", "--split-debug-info=./"], "Building APK...                                      ")
     display_apk_size()
     install_result = install_apk()
     if install_result:
@@ -335,26 +196,14 @@ def install_apk():
     if not apk_files:
         print(f"{RED}No APK found to install!{NC}")
         return False
-    # ধরো arm64-v8a apk আগে install করার চেষ্টা করবে
+    # Try to install arm64-v8a APK first
     for apk_path in apk_files:
         if "arm64-v8a" in apk_path:
             print(f"{YELLOW}Installing {apk_path}...{NC}")
-            process = subprocess.Popen(
-                ["adb", "install", "-r", apk_path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            result = show_loading("Installing on device...                              ", process)
-            return result
-    # না পেলে প্রথম apk-টা install করবে
+            return run_flutter_command(["adb", "install", "-r", apk_path], "Installing on device...                              ")
+    # If not found, install the first apk
     print(f"{YELLOW}Installing {apk_files[0]}...{NC}")
-    process = subprocess.Popen(
-        ["adb", "install", "-r", apk_files[0]],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    result = show_loading("Installing on device...                              ", process)
-    return result
+    return run_flutter_command(["adb", "install", "-r", apk_files[0]], "Installing on device...                              ")
 
 def update_pods():
     """Update iOS pods"""
@@ -368,26 +217,15 @@ def update_pods():
     try:
         os.remove("Podfile.lock")
         # Use a dummy process for the loading animation
-        dummy_process = subprocess.Popen(["sleep", "0.1"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        show_loading("Removing Podfile.lock                                 ", dummy_process)
+        run_flutter_command(["sleep", "0.1"], "Removing Podfile.lock                                 ")
     except FileNotFoundError:
         pass
     
     # Update pod repo
-    process = subprocess.Popen(
-        ["pod", "repo", "update"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Updating pod repository                               ", process)
+    run_flutter_command(["pod", "repo", "update"], "Updating pod repository                               ")
     
     # Install pods
-    process = subprocess.Popen(
-        ["pod", "install"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    show_loading("Installing pods                                       ", process)
+    run_flutter_command(["pod", "install"], "Installing pods                                       ")
     
     # Return to root directory
     os.chdir(current_dir)
