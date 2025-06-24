@@ -324,16 +324,37 @@ def release_run():
     
     # Display APK size after building
     display_apk_size()
-    
-    # Install on device
+    install_result = install_apk()
+    if install_result:
+        print(f"\n{GREEN}✓ APK built and installed successfully!{NC}")
+    else:
+        print(f"\n{RED}✗ APK built but install failed!{NC}")
+
+def install_apk():
+    apk_files = glob.glob("build/app/outputs/flutter-apk/*.apk")
+    if not apk_files:
+        print(f"{RED}No APK found to install!{NC}")
+        return False
+    # ধরো arm64-v8a apk আগে install করার চেষ্টা করবে
+    for apk_path in apk_files:
+        if "arm64-v8a" in apk_path:
+            print(f"{YELLOW}Installing {apk_path}...{NC}")
+            process = subprocess.Popen(
+                ["adb", "install", "-r", apk_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            result = show_loading("Installing on device...                              ", process)
+            return result
+    # না পেলে প্রথম apk-টা install করবে
+    print(f"{YELLOW}Installing {apk_files[0]}...{NC}")
     process = subprocess.Popen(
-        ["flutter", "install", "--release"],
+        ["adb", "install", "-r", apk_files[0]],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
-    show_loading("Installing on device...                              ", process)
-    
-    print(f"\n{GREEN}✓ APK built and installed successfully!{NC}")
+    result = show_loading("Installing on device...                              ", process)
+    return result
 
 def update_pods():
     """Update iOS pods"""
